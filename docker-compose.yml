@@ -1,0 +1,14 @@
+version: '3.3'
+
+services:
+  taxi-back:
+    container_name: taxi-back
+    build: ./backend/
+    ports:
+      - "5000:5000"
+    command: sh -c "uvicorn backend.asgi:application --host 0.0.0.0 --port 5000 --reload"
+    restart: always
+    env_file: ./backend/.env
+    volumes:
+      - ./backend/:/app/
+      - ./static/:/static/
