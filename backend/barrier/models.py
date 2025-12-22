@@ -11,7 +11,7 @@ class BarrierStatus(models.TextChoices):
 class Barrier(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
-    point = models.PointField(geography=True)
+    point = models.PointField(srid=4326)
     status = models.CharField(
         max_length=255, choices=BarrierStatus.choices, default=BarrierStatus.NOT_CONNECTION
     )
