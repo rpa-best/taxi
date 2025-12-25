@@ -3,8 +3,7 @@ from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.contrib.gis.db.models.functions import Distance
 from rest_framework import serializers
-from rest_framework.exceptions import NotFound
-from car.models import Car
+from rest_framework.exceptions import NotFound, ValidationError
 from .models import Barrier, BarrierHistory
 
 
@@ -23,25 +22,33 @@ class BarrierSerializer(serializers.ModelSerializer):
 
 
 class BarrierCallSerializer(serializers.Serializer):
-    car = serializers.PrimaryKeyRelatedField(queryset=Car.objects.all(), write_only=True)
     lng = serializers.FloatField(write_only=True)
     lat = serializers.FloatField(write_only=True)
     barrier = BarrierSerializer(read_only=True)
     success = serializers.BooleanField(read_only=True)
 
-    def create(self, validated_data):
-        point = Point(validated_data['lng'], validated_data['lat'])
+    def validate(self, attrs):
+        point = Point(attrs['lng'], attrs['lat'])
         barrier = Barrier.objects.filter(
-            point__distance_lt=(point, D(km=2))
+            point__distance_lt=(point, D(km=0.6))
         ).annotate(distance=Distance("point", point)).order_by("distance").first()
+        
+        if not barrier:
+            raise NotFound("Barrier not found")
+        
+        attrs['barrier'] = barrier
 
-        if barrier:
-            success = barrier.call()
-            history = BarrierHistory.objects.create(
-                barrier=barrier, 
-                car=validated_data['car']
-            )
-            history.succuss = success
-            history.save()
-            return {"barrier": barrier, "success": success}
-        raise NotFound("Barrier not found")
+        if barrier and self.context['request'].user not in barrier.users.all():
+            raise ValidationError("You are not allowed to call this barrier")
+        return attrs
+
+    def create(self, validated_data):
+        barrier: Barrier = validated_data.get('barrier')
+        success = barrier.call()
+        history = BarrierHistory.objects.create(
+            barrier=barrier, 
+            car=validated_data['car']
+        )
+        history.succuss = success
+        history.save()
+        return {"barrier": barrier, "success": success}

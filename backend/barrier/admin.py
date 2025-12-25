@@ -15,7 +15,7 @@ class BarrierAdmin(GeoModelAdminMixin, ModelAdmin):
 
     fieldsets = (
         (None, {
-            "fields": ("name", "status", "phone")
+            "fields": ("name", "status", "phone", "users")
         }),
         ("Location", {
             "fields": ("point", "latitude", "longitude")

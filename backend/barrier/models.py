@@ -16,7 +16,7 @@ class Barrier(models.Model):
         max_length=255, choices=BarrierStatus.choices, default=BarrierStatus.NOT_CONNECTION
     )
     phone = models.CharField(max_length=255, unique=True)
-    cars = models.ManyToManyField("car.Car", blank=True)
+    users = models.ManyToManyField("oauth.User", blank=True)
 
     def __str__(self):
         return self.name
@@ -30,7 +30,7 @@ class BarrierHistory(models.Model):
     barrier = models.ForeignKey(Barrier, on_delete=models.CASCADE)
     succuss = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    car = models.ForeignKey("car.Car", on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey("oauth.User", on_delete=models.SET_NULL, null=True)
 
     class Meta:
         ordering = ["-created_at"]

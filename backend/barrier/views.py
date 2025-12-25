@@ -16,4 +16,6 @@ class BarrierFeatureView(ListAPIView):
 class BarrierCallView(CreateAPIView):
     queryset = Barrier.objects.all()
     serializer_class = BarrierCallSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     
